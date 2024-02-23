@@ -96,7 +96,7 @@ func disjoint_run{Compute}(peers: []PeerId, yield: *Worker -> Promise, log: []st
             prev <- promise.yield()
             -- TODO: consider the error!
             -- log(prev)
-            log(["Resolving subnet at:", p])
+            co log(["Resolving subnet at:", p])
 
             -- Independent resolve on every peer -- triggers moving to p
             res <- Subnet.resolve(deal_id)
@@ -112,26 +112,26 @@ func disjoint_run{Compute}(peers: []PeerId, yield: *Worker -> Promise, log: []st
                 -- Run job only once on every peer
                 if contains(observed_on, w.worker_id!) == false:
                     -- This peer was reached via another peer
-                    log(w.worker_id)
+                    co log(w.worker_id)
                     observed_on <<- w.worker_id!
                     -- Job is initiated only once on every peer
-                    log([w.worker_id!, "Get Compute.job"])
+                    co log([w.worker_id!, "Get Compute.job"])
                     job <- Compute.job(w)
-                    log([w.worker_id!, "Job planned"])
+                    co log([w.worker_id!, "Job planned"])
 
                     -- Cannot use the value :( but do run the job
                     pr <- job.run(Promise.done())
-                    log([w.worker_id!, "Got a Promise"])
+                    co log([w.worker_id!, "Got a Promise"])
                 
                     -- TODO: temporary shit
                     z <- pr.yield()
-                    log([w.worker_id!, "Promise yielded"])
-                    log(z)
+                    co log([w.worker_id!, "Promise yielded"])
+                    co log(z)
 
                     -- Workers is a stream of workers that have the job triggered/scheduled
                     workers <<- w
                 else:
-                  log(["Worker was already visited", w.worker_id!])
+                  co log(["Worker was already visited", w.worker_id!])
 
         parseq p <- peers on p:
             -- Independently, need to wait for the required number of workers to succeed before proceeding
